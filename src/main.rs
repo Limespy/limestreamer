@@ -1,5 +1,3 @@
-#![feature(convert_float_to_int)]
-
 use half::f16;
 use std::time::Instant;
 
@@ -21,6 +19,7 @@ const MAX_RAW_IMAGE_VALUE_U16: u16 = (1 << 12) - 1;
 // const MAX_RAW_IMAGE_VALUE_I16: i16 = MAX_RAW_IMAGE_VALUE_U16 as i16;
 const MAX_RAW_IMAGE_VALUE_F32: f32 = MAX_RAW_IMAGE_VALUE_U16 as f32;
 
+// Test parameters
 const TEST_LOW_RAW_IMAGE_VALUE_I16: i16 = 485; // not specific
 const TEST_LOW_RAW_IMAGE_VALUE_F32: f32 = TEST_LOW_RAW_IMAGE_VALUE_I16 as f32;
 const TEST_HIGH_RAW_IMAGE_VALUE_I16: i16 = 3500;
