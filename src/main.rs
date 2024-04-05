@@ -6,7 +6,7 @@ const IMAGE_WIDTH: usize = 500;
 const IMAGE_HEIGHT: usize = 500;
 
 const MAX_STEP_E: u8 = 0b111;
-const EMBEDD_STENCIL: u8 = !MAX_STEP_E;
+const EMBED_NEGATIVE: u8 = !MAX_STEP_E;
 const MIN_STEP: usize = 2;
 const MIN_STEP_E: u8 = 0;
 
@@ -55,24 +55,29 @@ const SQRT_TABLE: [f32; MAX_STEP_E as usize + 1] = [1., 1., 2., 4., 5., 8., 11.,
 // =====================================================================
 // fn embed(wrapper: f16, payload: u8) -> f16 {
 //     let mut a: [u8; 2] =  wrapper.to_le_bytes();
-//     a[0] &= EMBEDD_STENCIL;
+//     a[0] &= EMBED_NEGATIVE;
 //     a[0] |= payload;
 //     f16::from_le_bytes(a)
 // }
 // =====================================================================
 fn encode(y: f32, step_e: u8, compressed: &mut [u8], index: &mut usize) {
     let a: [u8; 2] =  f16::from_f32(y).to_le_bytes();
-    compressed[*index] = (a[0] & EMBEDD_STENCIL) | step_e;
+    compressed[*index] = (a[0] & EMBED_NEGATIVE) | step_e;
     compressed[*index+1] = a[1];
     *index += 2;
 }
 // =====================================================================
-// fn decode(lsB: u8, step_e: u8, compressed: &mut [u8], index: &mut usize) {
-//     let a: [u8; 2] =  f16::from_f32(y).to_le_bytes();
-//     compressed[*index] = (a[0] & EMBEDD_STENCIL) | step_e;
-//     compressed[*index+1] = a[1];
-//     *index += 2;
-// }
+fn decode(encoded: &[u8], index: &mut usize) -> (usize, f32) {
+    let lsB: u8 = encoded[*index];
+    *index += 1;
+    let msB: u8 = encoded[*index];
+    *index += 1;
+
+    let step: usize = 1 << (((lsB & MAX_STEP_E) + 1) as usize);
+    let y: f32 = f16::from_le_bytes([lsB & EMBED_NEGATIVE, msB]).to_f32();
+
+    (step, y)
+}
 // =====================================================================
 fn check(
     row: &[f32],
@@ -103,7 +108,7 @@ fn check(
 // =====================================================================
 fn compress(row: &[f32], compressed: &mut[u8]) -> (usize, Debug) {
 
-    let mut debug = Debug{row_accesses: 0};
+    let mut debug: Debug = Debug{row_accesses: 0};
 
     const MIN_LENGTH: f32       = MIN_STEP as f32;
     const INITIAL_STEP: usize   = MIN_STEP * 2;
